@@ -1,5 +1,10 @@
 use bevy::{window::close_on_esc, prelude::*};
 
+// Exemple to I18n import
+use rust_i18n::t;
+
+rust_i18n::i18n!("locales");
+
 fn main () {
     App::new()
       .insert_resource(Msaa { samples: 4 })

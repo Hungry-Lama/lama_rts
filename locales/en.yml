@@ -1,0 +1,4 @@
+en:
+  hello: Hello world
+  messages:
+    hello: Hello, %{name}
