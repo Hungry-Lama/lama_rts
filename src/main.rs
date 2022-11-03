@@ -15,7 +15,6 @@ fn main () {
     .run();
 }
 
-
 fn setup(
     mut commands: Commands,
 ) {
