@@ -1,4 +1,4 @@
-use  bevy::{window::close_on_esc, prelude::*};
+use bevy::{window::close_on_esc, prelude::*};
 
 fn main () {
     App::new()
@@ -14,7 +14,6 @@ fn main () {
       .add_plugins(DefaultPlugins)
     .run();
 }
-
 
 fn setup(
     mut commands: Commands,
