@@ -34,9 +34,11 @@ struct CameraData {
 
 fn setup(
     mut commands: Commands,
-    mut camera: ResMut<CameraData>
+    mut camera: ResMut<CameraData>,
+    mut window: ResMut<Windows>
 ) {
-  camera.speed = 2.0;
+  camera.speed = 20.0;
+  window.primary_mut().set_cursor_lock_mode(true);
 
   commands
     .spawn_bundle(Camera3dBundle{
@@ -80,22 +82,31 @@ fn spawn_basic_scene(
 
 fn move_camera(
   keyboard_input: Res<Input<KeyCode>>,
+  windows: Res<Windows>,
   mut transforms: Query<&mut Transform, With<Camera3d>>,
   camera_data: Res<CameraData>,
   time: Res<Time>,
 ) {
   let mut translation = Vec3::default();
 
-  if keyboard_input.pressed(KeyCode::Up) {
+  let window = windows.primary();
+  let screen_pos = window.cursor_position().unwrap();
+  // get the size of the window
+  let window_size = Vec2::new(window.width() as f32, window.height() as f32);
+
+  // convert screen position [0..resolution] to ndc [-1..1] (gpu coordinates)
+  let ndc = (screen_pos / window_size) * 2.0 - Vec2::ONE;  
+
+  if keyboard_input.pressed(KeyCode::Up) || ndc.y > 0.95 {
       translation.z -= 1.0;
   }
-  if keyboard_input.pressed(KeyCode::Down) {
+  if keyboard_input.pressed(KeyCode::Down) || ndc.y < -0.95 {
       translation.z += 1.0;
   }
-  if keyboard_input.pressed(KeyCode::Right) {
+  if keyboard_input.pressed(KeyCode::Right) || ndc.x > 0.95 {
       translation.x += 1.0;
   }
-  if keyboard_input.pressed(KeyCode::Left) {
+  if keyboard_input.pressed(KeyCode::Left) || ndc.x < -0.95 {
       translation.x -= 1.0;
   }
 
