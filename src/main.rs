@@ -21,13 +21,17 @@ fn main () {
     ..Default::default()
   })
   .init_resource::<CameraData>()
+  .init_resource::<PlayerData>()
   .add_startup_system(spawn_basic_scene)
   .add_startup_system(setup)
+  .add_startup_system(setup_ui)
   .add_system_set(
     SystemSet::new()
     .with_system(move_camera)
     .with_system(change_camera_data)
-    .with_system(set_character_target),
+    .with_system(set_character_target)
+    .with_system(update_ore_ui)
+    .with_system(debug_inputs),
   )
   .add_system(move_character_towards_target)
   .add_system(close_on_esc)
@@ -38,6 +42,12 @@ fn main () {
 #[derive(Default)]
 struct CameraData {
     speed: f32,
+}
+
+#[derive(Default)]
+struct PlayerData {
+    ore: u32,
+    max_ore: u32,
 }
 
 #[derive(Component)]
@@ -56,10 +66,14 @@ struct Movable {
 
 fn setup(
     mut commands: Commands,
-    mut camera: ResMut<CameraData>,
+    mut player_data: ResMut<PlayerData>,
+    mut camera_data: ResMut<CameraData>,
     mut window: ResMut<Windows>
 ) {
-  camera.speed = 20.0;
+  camera_data.speed = 20.0;
+  player_data.ore = 15;
+  player_data.max_ore = 25;
+
   window.primary_mut().set_cursor_lock_mode(true);
   commands.insert_resource(DefaultPluginState::<MyRaycastSet>::default().with_debug_cursor());
 
@@ -190,10 +204,10 @@ fn change_camera_data(
   mut camera_data: ResMut<CameraData>,
 ) {
   if keyboard_input.just_pressed(KeyCode::NumpadAdd) {
-      camera_data.speed += 5.0;
+    camera_data.speed += 5.0;
   }
   if keyboard_input.just_pressed(KeyCode::NumpadSubtract) {
-      camera_data.speed -= 5.0;
+    camera_data.speed -= 5.0;
   }
 
   if camera_data.speed > 40.0 {
@@ -221,8 +235,8 @@ pub fn select_character_picking_event(
               }
             }
           },
-          PickingEvent::Hover(e) => {/*info!("Egads! A hover event!? {:?}", e)*/},
-          PickingEvent::Clicked(e) => {/*info!("Gee Willikers, it's a click! {:?}", e)*/},
+          PickingEvent::Hover(_e) => {/*info!("Egads! A hover event!? {:?}", e)*/},
+          PickingEvent::Clicked(_e) => {/*info!("Gee Willikers, it's a click! {:?}", e)*/},
       }
   }
 }
@@ -271,3 +285,50 @@ fn set_character_target(
     }
   }
 }
+
+fn setup_ui(
+  mut commands: Commands,
+  asset_server: Res<AssetServer>,
+  player_data: Res<PlayerData>
+) {
+  commands
+      .spawn_bundle(TextBundle::from_sections([
+        TextSection::new(
+          format!("Ore: {}/{}", player_data.ore, player_data.max_ore),
+          TextStyle {
+            font: asset_server.load("fonts/Akira Expanded Demo.otf"),
+            font_size: 20.0,
+            color: Color::rgb(0.5, 0.5, 1.0),
+        },
+      ),
+      ])
+      .with_style(Style {
+        position_type: PositionType::Absolute,
+        position: UiRect {
+            top: Val::Px(5.0),
+            left: Val::Px(5.0),
+            ..default()
+        },
+        ..default()
+      }),
+      );
+}
+
+fn update_ore_ui(
+  player_data: Res<PlayerData>,
+  mut texts: Query<&mut Text>
+) {
+  for mut text in texts.iter_mut() {
+    text.sections[0].value = format!("Ore: {}/{}", player_data.ore, player_data.max_ore);
+  }
+}
+
+fn debug_inputs (
+  keyboard_input: Res<Input<KeyCode>>,
+  mut player_data: ResMut<PlayerData>,
+) {
+  if keyboard_input.just_pressed(KeyCode::P) {
+    player_data.ore += 1;
+  }
+}
+
