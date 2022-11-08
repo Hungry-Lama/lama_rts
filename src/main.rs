@@ -1,5 +1,6 @@
 use bevy::{window::close_on_esc, prelude::*, render::camera::{self, RenderTarget}};
 use bevy_mod_picking::*;
+use bevy_mod_raycast::*;
 
 // Exemple to I18n import
 use rust_i18n::t;
@@ -11,6 +12,7 @@ fn main () {
   App::new()
   .add_plugins(DefaultPlugins)
   .add_plugins(DefaultPickingPlugins)
+  .add_plugin(DefaultRaycastingPlugin::<MyRaycastSet>::default())
   .insert_resource(Msaa { samples: 4 })
   .insert_resource(WindowDescriptor {
     title: "Bevy Game".to_string(),
@@ -25,8 +27,9 @@ fn main () {
     SystemSet::new()
     .with_system(move_camera)
     .with_system(change_camera_data)
-    .with_system(move_character),
+    .with_system(set_character_target),
   )
+  .add_system(move_character_towards_target)
   .add_system(close_on_esc)
   .add_system_to_stage(CoreStage::PostUpdate, select_character_picking_event)
   .run();
@@ -40,8 +43,16 @@ struct CameraData {
 #[derive(Component)]
 struct MainCamera;
 
+struct MyRaycastSet;
+
 #[derive(Component)]
 struct Selected;
+
+#[derive(Component)]
+struct Movable {
+  speed: f32,
+  target: Option<Vec3>,
+}
 
 fn setup(
     mut commands: Commands,
@@ -50,6 +61,7 @@ fn setup(
 ) {
   camera.speed = 20.0;
   window.primary_mut().set_cursor_lock_mode(true);
+  commands.insert_resource(DefaultPluginState::<MyRaycastSet>::default().with_debug_cursor());
 
   commands
     .spawn_bundle(Camera3dBundle{
@@ -58,6 +70,7 @@ fn setup(
     })
     .insert(MainCamera)
     .insert_bundle(PickingCameraBundle::default())
+    .insert(RayCastSource::<MyRaycastSet>::new())
     .commands();
     // .spawn_bundle(UiCameraBundle::default());
 }
@@ -71,26 +84,49 @@ fn spawn_basic_scene(
       mesh: meshes.add(Mesh::from(shape::Plane { size: 25.0 })),
       material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
       ..default()
-  });
+  }).insert(RayCastMesh::<MyRaycastSet>::default()); // Make this mesh ray cast-able;
 
   commands.spawn_bundle(PbrBundle {
       mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
       material: materials.add(Color::rgb(0.67, 0.84, 0.92).into()),
       transform: Transform::from_xyz(0.0, 0.5, 0.0),
       ..default()
-  }).insert_bundle(PickableBundle::default());
+  })
+  .insert_bundle(PickableBundle::default())
+  .insert(Movable {
+    speed: 5.0,
+    target: None,
+  });
+
   commands.spawn_bundle(PbrBundle {
     mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
     material: materials.add(Color::rgb(0.67, 0.84, 0.92).into()),
     transform: Transform::from_xyz(2.0, 0.5, 2.0),
     ..default()
-  }).insert_bundle(PickableBundle::default());
+  })
+  .insert_bundle(PickableBundle::default())
+  .insert(Movable {
+    speed: 5.0,
+    target: None,
+  });
+
   commands.spawn_bundle(PbrBundle {
     mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
     material: materials.add(Color::rgb(0.67, 0.84, 0.92).into()),
     transform: Transform::from_xyz(-1.0, 0.5, 1.0),
     ..default()
-  }).insert_bundle(PickableBundle::default());
+  })
+  .insert_bundle(PickableBundle::default())
+  .insert(Movable {
+    speed: 5.0,
+    target: None,
+  });
+
+
+  commands.spawn_bundle(PointLightBundle {
+    transform: Transform::from_translation(Vec3::new(0.0, 20.0, 0.0)),
+    ..Default::default()
+});
 }
 
 fn move_camera(
@@ -149,14 +185,6 @@ fn change_camera_data(
   }
 }
 
-fn move_character(
-  mut selectables: Query<&mut Transform, With<Selected>>
-) {
-  for mut transform in selectables.iter_mut() {
-    transform.translation += Vec3::X * 0.01;
-  }
-}
-
 pub fn select_character_picking_event(
   mut commands: Commands,
   mut events: EventReader<PickingEvent>
@@ -178,5 +206,50 @@ pub fn select_character_picking_event(
           PickingEvent::Hover(e) => {/*info!("Egads! A hover event!? {:?}", e)*/},
           PickingEvent::Clicked(e) => {/*info!("Gee Willikers, it's a click! {:?}", e)*/},
       }
+  }
+}
+
+fn move_character_towards_target(
+  mut selectables: Query<(&mut Transform, &mut Movable)>,
+  time: Res<Time>,
+) {
+  for (mut transform, mut movable) in selectables.iter_mut() {
+    match movable.target {
+      Some(t) => {
+
+        if (transform.translation - t).length() < 0.2 {
+          movable.target = None;
+        } else {
+          let translate = (t - transform.translation).normalize() * movable.speed * time.delta_seconds();
+          transform.translation += translate;
+        }
+      },
+      None => continue,
+    }
+  }
+}
+
+// Update our `RayCastSource` with the current cursor position every frame.
+fn set_character_target(
+  mut query: Query<&mut RayCastSource<MyRaycastSet>>,
+  mut selectables: Query<&mut Movable, With<Selected>>,
+  buttons: Res<Input<MouseButton>>,
+  windows: Res<Windows>,
+) {
+  let window = windows.get_primary().unwrap();
+
+  if let Some(cursor_position) = window.cursor_position() {
+    for mut pick_source in &mut query {
+      pick_source.cast_method = RayCastMethod::Screenspace(cursor_position);
+
+      if buttons.just_pressed(MouseButton::Right) {
+        if let Some((_, intersection)) = pick_source.intersect_top() {
+          for mut movable in selectables.iter_mut() {
+            let new_target = intersection.position();
+            movable.target = Some(new_target);
+          }
+        }
+      }
+    }
   }
 }
