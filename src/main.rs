@@ -1,4 +1,4 @@
-use bevy::{window::close_on_esc, prelude::*, render::camera::{self, RenderTarget}};
+use bevy::{window::close_on_esc, prelude::*, render::camera::{self, RenderTarget}, core::Zeroable};
 use bevy_mod_picking::*;
 use bevy_mod_raycast::*;
 
@@ -122,11 +122,29 @@ fn spawn_basic_scene(
     target: None,
   });
 
-
-  commands.spawn_bundle(PointLightBundle {
-    transform: Transform::from_translation(Vec3::new(0.0, 20.0, 0.0)),
-    ..Default::default()
-});
+    // directional 'sun' light
+    const HALF_SIZE: f32 = 10.0;
+    commands.spawn_bundle(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            // Configure the projection to better fit the scene
+            shadow_projection: OrthographicProjection {
+                left: -HALF_SIZE,
+                right: HALF_SIZE,
+                bottom: -HALF_SIZE,
+                top: HALF_SIZE,
+                near: -10.0 * HALF_SIZE,
+                far: 10.0 * HALF_SIZE,
+                ..default()
+            },
+            shadows_enabled: true,
+            ..default()
+        },
+        transform: Transform {
+            translation: Vec3::new(10.0, 20.0, 20.0),
+            ..default()
+        }.looking_at(Vec3::ZERO, Vec3::Y),
+        ..default()
+    });
 }
 
 fn move_camera(
