@@ -64,6 +64,18 @@ struct Movable {
   target: Option<Vec3>,
 }
 
+pub enum CollectibleResourceType {
+  Ore,
+  None,
+}
+
+#[derive(Component)]
+struct CollectibleResourceVein {
+  resource_type: CollectibleResourceType,
+  amount: u32,
+}
+
+
 fn setup(
     mut commands: Commands,
     mut player_data: ResMut<PlayerData>,
@@ -94,12 +106,17 @@ fn spawn_basic_scene(
   mut meshes: ResMut<Assets<Mesh>>,
   mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+
+  // The terrain plane
   commands.spawn_bundle(PbrBundle {
       mesh: meshes.add(Mesh::from(shape::Plane { size: 25.0 })),
       material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
       ..default()
   }).insert(RayCastMesh::<MyRaycastSet>::default()); // Make this mesh ray cast-able;
 
+
+
+  // The "workers" cubes
   commands.spawn_bundle(PbrBundle {
       mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
       material: materials.add(Color::rgb(0.67, 0.84, 0.92).into()),
@@ -136,6 +153,8 @@ fn spawn_basic_scene(
     target: None,
   });
 
+
+
     // directional 'sun' light
     const HALF_SIZE: f32 = 10.0;
     commands.spawn_bundle(DirectionalLightBundle {
@@ -158,6 +177,20 @@ fn spawn_basic_scene(
             ..default()
         }.looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
+    });
+
+
+    // The resource vein
+    commands.spawn_bundle(PbrBundle {
+      mesh: meshes.add(Mesh::from(shape::UVSphere { radius: 1.0, ..default()})),
+      material: materials.add(Color::rgb(0.97, 0.24, 0.22).into()),
+      transform: Transform::from_xyz(-5.0, 0.0, 5.0),
+      ..default()
+    })
+    .insert_bundle(PickableBundle::default())
+    .insert(CollectibleResourceVein {
+      resource_type: CollectibleResourceType::Ore,
+      amount: 50,
     });
 }
 
