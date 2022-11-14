@@ -46,8 +46,10 @@ fn main() {
         .add_system(plugins::character::interaction::starts_interaction_event)
         .add_system(plugins::character::interaction::set_interaction)
         .add_system(plugins::character::interaction::set_interaction_text)
-        .add_system_to_stage(CoreStage::PostUpdate, plugins::resource_vein::collect_resource)
+        .add_system(plugins::resource_vein::update_resource_vein_remaining_text)
         .add_system_to_stage(CoreStage::PostUpdate, select_character_picking_event)
+        .add_system_to_stage(CoreStage::PostUpdate, plugins::resource_vein::collect_resource)
+        .add_system_to_stage(CoreStage::Last, plugins::resource_vein::cleanup_empty_resource_vein)
         .add_system(close_on_esc)
         .run();
 }
@@ -225,7 +227,18 @@ fn spawn_basic_scene(
             timer: Timer::new(Duration::from_millis(500), true),
         })
         .insert(RayCastMesh::<components::selectable::Selectable>::default())
-        .insert(components::interactible::Interactible { interaction_point: Vec3 {x: -4., y: 0., z: 5.}});
+        .insert(components::interactible::Interactible { interaction_point: Vec3 {x: -4., y: 0., z: 5.}})
+        .with_children(|parent| {
+            // Test 3D text
+            let font = asset_server.load("fonts/FiraMono-Medium.ttf#mesh");
+  
+            parent.spawn_bundle(TextMeshBundle {
+                text_mesh: TextMesh::new_with_color("Remaining ore : 50", font, Color::rgb(0., 0., 1.)),
+                transform: Transform::from_rotation(Quat::from_euler(EulerRot::XYZ, -90., 0., 0.))
+                    .with_translation(Vec3::new(-1., 1., 0.)),
+                ..Default::default()
+            });
+        });
 }
 
 fn move_camera(
