@@ -46,9 +46,9 @@ fn main() {
         .add_system(plugins::character::interaction::starts_interaction_event)
         .add_system(plugins::character::interaction::set_interaction)
         .add_system(plugins::character::interaction::set_interaction_text)
-        .add_system(plugins::resource_vein::collect_resource)
-        .add_system(close_on_esc)
+        .add_system_to_stage(CoreStage::PostUpdate, plugins::resource_vein::collect_resource)
         .add_system_to_stage(CoreStage::PostUpdate, select_character_picking_event)
+        .add_system(close_on_esc)
         .run();
 }
 
@@ -222,7 +222,7 @@ fn spawn_basic_scene(
             resource_type: resources::collectible_resource_type::CollectibleResourceType::Ore,
             amount: 50,
             workers: Vec::new(),
-            timer: Timer::new(Duration::from_secs(1), true),
+            timer: Timer::new(Duration::from_millis(500), true),
         })
         .insert(RayCastMesh::<components::selectable::Selectable>::default())
         .insert(components::interactible::Interactible { interaction_point: Vec3 {x: -4., y: 0., z: 5.}});

@@ -12,10 +12,10 @@ pub fn starts_interaction_event(
     for ev in ev_interaction_starts.iter() {
         if let Ok(_) = q_interactor.get(ev.0) {
             if let Ok(mut resource_vein) = q_interactible.get_mut (ev.1) {
-                resource_vein.workers.push(ev.0);
-
                 ev_interaction_text
                 .send(InteractionStateEvent(ev.0, InteractState::Interacting));
+
+                resource_vein.workers.push(ev.0);
             }
         }
     }
