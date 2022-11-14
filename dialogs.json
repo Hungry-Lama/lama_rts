@@ -1,0 +1,16 @@
+{
+  "dialogs": {
+    "0": {
+      "text": "Premier dialogue",
+      "id_next": 1
+    },
+    "1": {
+      "text": "Second dialogue",
+      "id_next": 2
+    },
+    "2": {
+      "text": "Troisieme et dernier dialogue",
+      "id_next": null
+    }
+  }
+}
