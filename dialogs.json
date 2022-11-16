@@ -1,5 +1,79 @@
 {
   "dialogs": {
+    "6": {
+      "text": "*sad*",
+      "choices": [
+        {
+          "text": "I don't care",
+          "conditions": null,
+          "consequences": null,
+          "id_next": null
+        }
+      ]
+    },
+    "2": {
+      "text": "I need ore, can you give me 20 please ?",
+      "choices": [
+        {
+          "text": "Sure, take this my friend",
+          "conditions": [
+            {
+              "ResourceCheck": [
+                "Ore",
+                20
+              ]
+            }
+          ],
+          "consequences": [
+            {
+              "SubResource": [
+                "Ore",
+                20
+              ]
+            }
+          ],
+          "id_next": {
+            "Goto": 3
+          }
+        },
+        {
+          "text": "Nope",
+          "conditions": null,
+          "consequences": null,
+          "id_next": {
+            "Goto": 3
+          }
+        }
+      ]
+    },
+    "1": {
+      "text": "Do you want some free ore ?",
+      "choices": [
+        {
+          "text": "Sure !",
+          "conditions": null,
+          "consequences": [
+            {
+              "AddResource": [
+                "Ore",
+                25
+              ]
+            }
+          ],
+          "id_next": {
+            "Goto": 2
+          }
+        },
+        {
+          "text": "No thanks, it sounds like a trap",
+          "conditions": null,
+          "consequences": null,
+          "id_next": {
+            "Goto": 2
+          }
+        }
+      ]
+    },
     "3": {
       "text": "Wanna play a coin toss game with me ? The bet will be 1 ore",
       "choices": [
@@ -15,9 +89,9 @@
           ],
           "consequences": [
             {
-              "AddResource": [
+              "SubResource": [
                 "Ore",
-                -1
+                1
               ]
             }
           ],
@@ -44,83 +118,20 @@
         }
       ]
     },
-    "1": {
-      "text": "Do you want some free ore ?",
+    "4": {
+      "text": "GG, you won ! Here's your reward",
       "choices": [
         {
-          "text": "Sure !",
+          "text": "Thanks ! See ya",
           "conditions": null,
           "consequences": [
             {
               "AddResource": [
                 "Ore",
-                25
+                2
               ]
             }
           ],
-          "id_next": {
-            "Goto": 2
-          }
-        },
-        {
-          "text": "No thanks, it sounds like a trap",
-          "conditions": null,
-          "consequences": [
-            {
-              "AddResource": [
-                "Ore",
-                -10
-              ]
-            }
-          ],
-          "id_next": {
-            "Goto": 2
-          }
-        }
-      ]
-    },
-    "2": {
-      "text": "I need ore, can you give me 20 please ?",
-      "choices": [
-        {
-          "text": "Sure, take this my friend",
-          "conditions": [
-            {
-              "ResourceCheck": [
-                "Ore",
-                20
-              ]
-            }
-          ],
-          "consequences": [
-            {
-              "AddResource": [
-                "Ore",
-                20
-              ]
-            }
-          ],
-          "id_next": {
-            "Goto": 3
-          }
-        },
-        {
-          "text": "Nope",
-          "conditions": null,
-          "consequences": null,
-          "id_next": {
-            "Goto": 3
-          }
-        }
-      ]
-    },
-    "6": {
-      "text": "*sad*",
-      "choices": [
-        {
-          "text": "I don't care",
-          "conditions": null,
-          "consequences": null,
           "id_next": null
         }
       ]
@@ -138,31 +149,13 @@
         }
       ]
     },
-    "4": {
+    "5": {
       "text": "Heh, I won !",
       "choices": [
         {
           "text": "GG WP",
           "conditions": null,
           "consequences": null,
-          "id_next": null
-        }
-      ]
-    },
-    "5": {
-      "text": "GG, you won ! Here's your reward",
-      "choices": [
-        {
-          "text": "Thanks ! See ya",
-          "conditions": null,
-          "consequences": [
-            {
-              "AddResource": [
-                "Ore",
-                2
-              ]
-            }
-          ],
           "id_next": null
         }
       ]

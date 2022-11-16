@@ -2,7 +2,7 @@ use std::{fs::{File, self}, io::Write};
 
 use bevy::{prelude::*, utils::hashbrown::HashMap};
 
-use crate::{resources::{dialog::{DialogDatas, CurrentDialog, DialogData, DialogChoice, DialogChoiceEvent, DialogConsequences, DialogCondition}, resources_enums::InGameResourceType}, DialogBox, DialogText};
+use crate::{resources::{dialog::{DialogDatas, CurrentDialog, DialogData, DialogChoice, DialogChoiceEvent, DialogConsequences, DialogCondition}, resources_enums::InGameResourceType}, DialogBox, DialogText, components::datas::PlayerData};
 use crate::plugins::dialog::DialogChoiceEvent::*;
 use rand::prelude::*;
 
@@ -29,11 +29,6 @@ pub fn goto_dialog (
 
 pub fn display_current_dialog (
     current: Res<CurrentDialog>,
-    /*mut set: ParamSet<(
-        Query<&mut Visibility, (With<DialogBox>, Without<DialogChoiceButton>)>,
-        Query<&mut Text, With<DialogText>>,
-        Query<(&mut Visibility, &DialogChoiceButton)>,
-    )>,*/
     mut dialog_box: Query<&mut Visibility, (With<DialogBox>, Without<DialogChoiceButton>)>,
     mut dialog_text: Query<&mut Text, With<DialogText>>,
     mut dialog_buttons: Query<(&mut Visibility, &DialogChoiceButton, &Children)>,
@@ -72,6 +67,7 @@ pub fn button_choice_dialog(
         (Changed<Interaction>, With<Button>),
     >,
     current: ResMut<CurrentDialog>,
+    mut player_datas: ResMut<PlayerData>,
     mut ev: EventWriter<ReadNextDialog>,
 ) {
     for (interaction, mut color, button) in &mut interaction_query {
@@ -79,6 +75,22 @@ pub fn button_choice_dialog(
             Interaction::Clicked => {
                 if let Some(dialog) = &current.dialog {
                     if let Some(choice) = dialog.choices.get(button.id) {
+                        if let Some(consequences) = &choice.consequences {
+                            for consequence in consequences {
+                                match consequence {
+                                    DialogConsequences::AddResource(resource_type, amount) => {
+                                        player_datas.ore += amount;
+                                    },
+                                    DialogConsequences::SubResource(resource_type, amount) => {
+                                        player_datas.ore -= amount;
+                                    },
+                                    DialogConsequences::SetResource(resource_type, amount) => {
+                                        player_datas.ore = *amount;
+                                    },
+                                    DialogConsequences::SetSwitch(_, _) => todo!(),
+                                }
+                            }
+                        }
                         if let Some(choice_event) = &choice.id_next {
                             let id_next = match choice_event {
                                 Random((max, win), (win_id, lose_id)) => {
@@ -142,7 +154,7 @@ pub fn create_json (
         DialogChoice {
             text: String::from("No thanks, it sounds like a trap"),
             conditions: None,
-            consequences: Some(vec!(DialogConsequences::AddResource(InGameResourceType::Ore, -10))),
+            consequences: None,
             id_next: Some(DialogChoiceEvent::Goto(2)),
         }],    
     });
@@ -152,7 +164,7 @@ pub fn create_json (
         choices: vec![DialogChoice {
             text: String::from("Sure, take this my friend"),
             conditions: Some(vec!(DialogCondition::ResourceCheck(InGameResourceType::Ore, 20))),
-            consequences: Some(vec!(DialogConsequences::AddResource(InGameResourceType::Ore, 20))),
+            consequences: Some(vec!(DialogConsequences::SubResource(InGameResourceType::Ore, 20))),
             id_next: Some(DialogChoiceEvent::Goto(3)),
         },
         DialogChoice {
@@ -168,7 +180,7 @@ pub fn create_json (
         choices: vec![DialogChoice {
             text: String::from("I'm in !"),
             conditions: Some(vec!(DialogCondition::ResourceCheck(InGameResourceType::Ore, 1))),
-            consequences: Some(vec!(DialogConsequences::AddResource(InGameResourceType::Ore, -1))),
+            consequences: Some(vec!(DialogConsequences::SubResource(InGameResourceType::Ore, 1))),
             id_next: Some(DialogChoiceEvent::Random((100, 50),(4, 5))),
         },
         DialogChoice {

@@ -17,7 +17,8 @@ pub enum DialogCondition {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub enum DialogConsequences {
-    AddResource(InGameResourceType, i32),
+    AddResource(InGameResourceType, u32),
+    SubResource(InGameResourceType, u32),
     SetResource(InGameResourceType, u32),
     SetSwitch(SwitchType, bool),
 }
