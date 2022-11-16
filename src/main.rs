@@ -424,7 +424,7 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>, player_data:
             )
             .insert(DialogText);
 
-            // Next button
+            // Next buttons
             parent.spawn_bundle(ButtonBundle {
                 style: Style {
                     size: Size::new(Val::Px(150.0), Val::Px(65.0)),
@@ -464,6 +464,86 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>, player_data:
                 );
             })
             .insert(DialogChoiceButton {id:0});
+
+            parent.spawn_bundle(ButtonBundle {
+                style: Style {
+                    size: Size::new(Val::Px(150.0), Val::Px(65.0)),
+                    // center button
+                    margin: UiRect {
+                        bottom: Val::Px(5.),
+                        top: Val::Auto,
+                        right: Val::Auto,
+                        left: Val::Auto,
+                    },
+                    // horizontally center child text
+                    justify_content: JustifyContent::FlexEnd,
+                    // vertically center child text
+                    align_items: AlignItems::Center,
+                    ..default()
+                },
+                color: bevy::prelude::UiColor(Color::rgb(0.15, 0.15, 0.85)),
+                ..default()
+            })
+            .with_children(|parent| {
+                // Button text "Next"
+                parent.spawn_bundle(
+                    TextBundle::from_sections([TextSection::new(
+                        format!("Next"),
+                        TextStyle {
+                            font: asset_server.load("fonts/Akira Expanded Demo.otf"),
+                            font_size: 20.0,
+                            color: Color::rgb(0.5, 0.5, 1.0),
+                        },
+                    )])
+                    .with_style(Style {
+                        margin: UiRect::all(Val::Auto),
+                        align_content: AlignContent::Center,
+                        align_self: AlignSelf::Center,
+                        ..default()
+                    }),
+                );
+            })
+            .insert(DialogChoiceButton {id:1});
+
+            parent.spawn_bundle(ButtonBundle {
+                style: Style {
+                    size: Size::new(Val::Px(150.0), Val::Px(65.0)),
+                    // center button
+                    margin: UiRect {
+                        bottom: Val::Px(5.),
+                        top: Val::Auto,
+                        right: Val::Auto,
+                        left: Val::Auto,
+                    },
+                    // horizontally center child text
+                    justify_content: JustifyContent::FlexEnd,
+                    // vertically center child text
+                    align_items: AlignItems::Center,
+                    ..default()
+                },
+                color: bevy::prelude::UiColor(Color::rgb(0.15, 0.15, 0.85)),
+                ..default()
+            })
+            .with_children(|parent| {
+                // Button text "Next"
+                parent.spawn_bundle(
+                    TextBundle::from_sections([TextSection::new(
+                        format!("Next"),
+                        TextStyle {
+                            font: asset_server.load("fonts/Akira Expanded Demo.otf"),
+                            font_size: 20.0,
+                            color: Color::rgb(0.5, 0.5, 1.0),
+                        },
+                    )])
+                    .with_style(Style {
+                        margin: UiRect::all(Val::Auto),
+                        align_content: AlignContent::Center,
+                        align_self: AlignSelf::Center,
+                        ..default()
+                    }),
+                );
+            })
+            .insert(DialogChoiceButton {id:2});
         });
     });
 }

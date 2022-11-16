@@ -29,14 +29,35 @@ pub fn goto_dialog (
 
 pub fn display_current_dialog (
     current: Res<CurrentDialog>,
-    mut dialog_box: Query<&mut Visibility, With<DialogBox>>,
-    mut dialog_text: Query<&mut Text, With<DialogText>>
+    /*mut set: ParamSet<(
+        Query<&mut Visibility, (With<DialogBox>, Without<DialogChoiceButton>)>,
+        Query<&mut Text, With<DialogText>>,
+        Query<(&mut Visibility, &DialogChoiceButton)>,
+    )>,*/
+    mut dialog_box: Query<&mut Visibility, (With<DialogBox>, Without<DialogChoiceButton>)>,
+    mut dialog_text: Query<&mut Text, With<DialogText>>,
+    mut dialog_buttons: Query<(&mut Visibility, &DialogChoiceButton, &Children)>,
+    mut dialog_button_text: Query<&mut Text, Without<DialogText>>,
 ) {
-    for mut visibility in dialog_box.iter_mut() {
-        for mut text in dialog_text.iter_mut() {
+    if let Ok(mut visibility) = dialog_box.get_single_mut() {
+        if let Ok(mut text) = dialog_text.get_single_mut() {
             if let Some(dialog) = &current.dialog {
                 visibility.is_visible = true;
                 text.sections[0].value = format!("{}", dialog.text);
+
+                for (mut btn_visibility, button, children) in dialog_buttons.iter_mut() {
+                    if let Some(choice) = dialog.choices.get(button.id) {
+                        for &child in children.iter() {
+                            if let Ok(mut btn_text) = dialog_button_text.get_mut(child) {
+                                btn_text.sections[0].value = choice.text.clone();
+                            }
+                        }
+                        btn_visibility.is_visible = true;
+                    } else {
+                        btn_visibility.is_visible = false;
+                    }
+                }
+
             } else {
                 visibility.is_visible = false;
                 text.sections[0].value = format!("");
