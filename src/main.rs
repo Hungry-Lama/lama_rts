@@ -1,14 +1,14 @@
-use std::time::Duration;
+use std::{time::Duration, sync::Mutex};
 
 use bevy::{
     prelude::*,
-    window::close_on_esc,
+    window::close_on_esc, utils::HashMap,
 };
 use bevy_mod_picking::*;
 use bevy_mod_raycast::*;
 use bevy_text_mesh::prelude::*;
-use components::datas::{DialogData, DialogDatas};
-use serde::__private::de;
+use plugins::dialog::DialogChoiceButton;
+use std::sync::Arc;
 
 mod components;
 mod resources;
@@ -31,12 +31,14 @@ fn main() {
         })
         .init_resource::<components::datas::CameraData>()
         .init_resource::<components::datas::PlayerData>()
-        .init_resource::<components::datas::DialogDatas>()
-        .init_resource::<components::datas::DialogData>()
-        .init_resource::<components::datas::CurrentDialog>()
+        .init_resource::<resources::dialog::DialogDatas>()
+        .init_resource::<resources::dialog::DialogData>()
+        .init_resource::<resources::dialog::CurrentDialog>()
+        //.init_resource::<DialogFunctions>()
+        .init_resource::<Test>()
         .add_event::<InteractionStateEvent>()
         .add_event::<InteractionStartsEvent>()
-        .add_event::<plugins::dialog::NextDialogButtonClicked>()
+        .add_event::<plugins::dialog::ReadNextDialog>()
         .add_startup_system(spawn_basic_scene)
         .add_startup_system(setup)
         .add_startup_system(setup_ui)
@@ -55,9 +57,9 @@ fn main() {
         .add_system(plugins::character::interaction::set_interaction)
         .add_system(plugins::character::interaction::set_interaction_text)
         .add_system(plugins::resource_vein::update_resource_vein_remaining_text)
-        .add_system(plugins::dialog::read_dialog)
+        .add_system(plugins::dialog::goto_dialog)
         .add_system(plugins::dialog::display_current_dialog)
-        .add_system(plugins::dialog::button_next_dialog)
+        .add_system(plugins::dialog::button_choice_dialog)
         .add_system_to_stage(CoreStage::PostUpdate, select_character_picking_event)
         .add_system_to_stage(CoreStage::PostUpdate, plugins::resource_vein::collect_resource)
         .add_system_to_stage(CoreStage::Last, plugins::resource_vein::cleanup_empty_resource_vein)
@@ -75,6 +77,16 @@ pub struct DialogText;
 
 #[derive(Component)]
 struct CollectibleResourceUI;
+
+#[derive(Default)]
+pub struct DialogFunctions {
+    pub test: Arc<Mutex<HashMap<u32, Box<dyn FnMut(Entity) -> Entity>>>>,
+}
+
+#[derive(Default)]
+pub struct Test {
+    pub test: HashMap<u32, u32>,
+}
 
 pub struct InteractionStateEvent(Entity, resources::interact_state::InteractState);
 pub struct InteractionStartsEvent(Entity, Entity);
@@ -240,7 +252,7 @@ fn spawn_basic_scene(
         })
         .insert_bundle(PickableBundle::default())
         .insert(components::resource_vein::ResourceVeinComponent {
-            resource_type: resources::collectible_resource_type::CollectibleResourceType::Ore,
+            resource_type: resources::resources_enums::InGameResourceType::Ore,
             amount: 50,
             workers: Vec::new(),
             timer: Timer::new(Duration::from_millis(500), true),
@@ -450,7 +462,8 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>, player_data:
                         ..default()
                     }),
                 );
-            });            
+            })
+            .insert(DialogChoiceButton {id:0});
         });
     });
 }
@@ -465,8 +478,8 @@ fn update_ore_ui(player_data: Res<components::datas::PlayerData>, mut texts: Que
 fn debug_inputs(
     keyboard_input: Res<Input<KeyCode>>,
     mut player_data: ResMut<components::datas::PlayerData>,
-    mut current_dialog: ResMut<components::datas::CurrentDialog>,
-    datas: ResMut<components::datas::DialogDatas>
+    mut current_dialog: ResMut<resources::dialog::CurrentDialog>,
+    datas: ResMut<resources::dialog::DialogDatas>
 ) {
     if keyboard_input.just_pressed(KeyCode::P) {
         player_data.ore += 1;

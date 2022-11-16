@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_text_mesh::TextMesh;
 
-use crate::{resources::{interact_state::InteractState, collectible_resource_type::CollectibleResourceType}, InteractionStartsEvent, InteractionStateEvent, components::{interactible::Interactible, can_interact::CanInteract, resource_vein::ResourceVeinComponent}};
+use crate::{resources::{interact_state::InteractState}, InteractionStartsEvent, InteractionStateEvent, components::{interactible::Interactible, can_interact::CanInteract, resource_vein::ResourceVeinComponent}};
 
 pub fn starts_interaction_event(
     mut ev_interaction_starts: EventReader<InteractionStartsEvent>,
