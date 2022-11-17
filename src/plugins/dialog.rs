@@ -10,7 +10,8 @@ pub struct ReadNextDialog(Option<u32>);
 
 #[derive(Component)]
 pub struct DialogChoiceButton {
-    pub id: usize
+    pub id: usize,
+    pub enabled: bool,
 }
 
 pub fn goto_dialog (
@@ -29,23 +30,53 @@ pub fn goto_dialog (
 
 pub fn display_current_dialog (
     current: Res<CurrentDialog>,
+    player_data: Res<PlayerData>,
     mut dialog_box: Query<&mut Visibility, (With<DialogBox>, Without<DialogChoiceButton>)>,
     mut dialog_text: Query<&mut Text, With<DialogText>>,
-    mut dialog_buttons: Query<(&mut Visibility, &DialogChoiceButton, &Children)>,
+    mut dialog_buttons: Query<(&mut Visibility, &mut DialogChoiceButton, &mut UiColor, &Children)>,
     mut dialog_button_text: Query<&mut Text, Without<DialogText>>,
 ) {
+    if !current.is_changed() {
+        return;
+    }
+    
     if let Ok(mut visibility) = dialog_box.get_single_mut() {
         if let Ok(mut text) = dialog_text.get_single_mut() {
             if let Some(dialog) = &current.dialog {
                 visibility.is_visible = true;
                 text.sections[0].value = format!("{}", dialog.text);
 
-                for (mut btn_visibility, button, children) in dialog_buttons.iter_mut() {
+                for (mut btn_visibility, mut button, mut color, children) in dialog_buttons.iter_mut() {
                     if let Some(choice) = dialog.choices.get(button.id) {
                         for &child in children.iter() {
                             if let Ok(mut btn_text) = dialog_button_text.get_mut(child) {
                                 btn_text.sections[0].value = choice.text.clone();
                             }
+                        }
+
+                        if let Some(conditions) = &choice.conditions {
+                            let mut conditions_passed = true;
+                            for condition in conditions {
+                                match condition {
+                                    DialogCondition::ResourceCheck(resource, amount) => {
+                                        if player_data.ore < *amount {
+                                            conditions_passed = false;
+                                            break;
+                                        }
+                                    },
+                                    DialogCondition::SwitchCheck(switch, state) => todo!(),
+                                }
+                            };
+
+                            button.enabled = conditions_passed;
+                            if conditions_passed {
+                                *color = bevy::prelude::UiColor(Color::rgb(0.15, 0.15, 0.85));
+                            } else {
+                                *color = bevy::prelude::UiColor(Color::rgb(0.5, 0.5, 0.5));
+                            }
+
+                        } else {
+                            button.enabled = true;
                         }
                         btn_visibility.is_visible = true;
                     } else {
@@ -71,6 +102,10 @@ pub fn button_choice_dialog(
     mut ev: EventWriter<ReadNextDialog>,
 ) {
     for (interaction, mut color, button) in &mut interaction_query {
+        if button.enabled == false {
+            println!("{}", button.id);
+            continue;
+        }
         match *interaction {
             Interaction::Clicked => {
                 if let Some(dialog) = &current.dialog {
@@ -109,7 +144,7 @@ pub fn button_choice_dialog(
                         } else {
                             ev.send(ReadNextDialog(None));
                         }
-                        *color = bevy::prelude::UiColor(Color::rgb(0.85, 0.15, 0.15))
+                        *color = bevy::prelude::UiColor(Color::rgb(0.85, 0.15, 0.15));
                     }
                 }
             } 

@@ -463,7 +463,7 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>, player_data:
                     }),
                 );
             })
-            .insert(DialogChoiceButton {id:0});
+            .insert(DialogChoiceButton {id:0, enabled: true});
 
             parent.spawn_bundle(ButtonBundle {
                 style: Style {
@@ -503,7 +503,7 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>, player_data:
                     }),
                 );
             })
-            .insert(DialogChoiceButton {id:1});
+            .insert(DialogChoiceButton {id:1, enabled: true});
 
             parent.spawn_bundle(ButtonBundle {
                 style: Style {
@@ -543,7 +543,7 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>, player_data:
                     }),
                 );
             })
-            .insert(DialogChoiceButton {id:2});
+            .insert(DialogChoiceButton {id:2, enabled: true});
         });
     });
 }
