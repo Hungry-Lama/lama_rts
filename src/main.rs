@@ -7,7 +7,8 @@ use bevy::{
 use bevy_mod_picking::*;
 use bevy_mod_raycast::*;
 use bevy_text_mesh::prelude::*;
-use plugins::dialog::DialogChoiceButton;
+use components::dialog::dialog_choice_button::DialogChoiceButton;
+use resources::techs_enums::Techs;
 use std::sync::Arc;
 
 mod components;
@@ -22,6 +23,9 @@ fn main() {
         .add_plugins(DefaultPickingPlugins)
         .add_plugin(DefaultRaycastingPlugin::<components::selectable::Selectable>::default())
         .add_plugin(TextMeshPlugin)
+        .add_plugin(plugins::character::CharacterPlugin)
+        .add_plugin(plugins::dialog::DialogPlugin)
+        .add_plugin(plugins::player::PlayerPlugin)
         .insert_resource(Msaa { samples: 4 })
         .insert_resource(WindowDescriptor {
             title: "Bevy Game".to_string(),
@@ -29,37 +33,16 @@ fn main() {
             height: 720.,
             ..Default::default()
         })
-        .init_resource::<components::datas::CameraData>()
-        .init_resource::<components::datas::PlayerData>()
-        .init_resource::<resources::dialog::DialogDatas>()
-        .init_resource::<resources::dialog::DialogData>()
-        .init_resource::<resources::dialog::CurrentDialog>()
-        //.init_resource::<DialogFunctions>()
-        .init_resource::<Test>()
         .add_event::<InteractionStateEvent>()
         .add_event::<InteractionStartsEvent>()
-        .add_event::<plugins::dialog::ReadNextDialog>()
         .add_startup_system(spawn_basic_scene)
         .add_startup_system(setup)
         .add_startup_system(setup_ui)
-        .add_startup_system(plugins::dialog::load_json)
-
-        .add_system_set(
-            SystemSet::new()
-                .with_system(move_camera)
-                .with_system(change_camera_data)
-                .with_system(plugins::character::movement::set_character_target)
-                .with_system(update_ore_ui)
-                .with_system(debug_inputs),
-        )
-        .add_system(plugins::character::movement::move_towards_target)
-        .add_system(plugins::character::interaction::starts_interaction_event)
-        .add_system(plugins::character::interaction::set_interaction)
-        .add_system(plugins::character::interaction::set_interaction_text)
+        .add_system(move_camera)
+        .add_system(change_camera_data)
+        .add_system(update_ore_ui)
+        .add_system(debug_inputs)
         .add_system(plugins::resource_vein::update_resource_vein_remaining_text)
-        .add_system(plugins::dialog::goto_dialog)
-        .add_system(plugins::dialog::display_current_dialog)
-        .add_system(plugins::dialog::button_choice_dialog)
         .add_system_to_stage(CoreStage::PostUpdate, select_character_picking_event)
         .add_system_to_stage(CoreStage::PostUpdate, plugins::resource_vein::collect_resource)
         .add_system_to_stage(CoreStage::Last, plugins::resource_vein::cleanup_empty_resource_vein)
@@ -83,24 +66,23 @@ pub struct DialogFunctions {
     pub test: Arc<Mutex<HashMap<u32, Box<dyn FnMut(Entity) -> Entity>>>>,
 }
 
-#[derive(Default)]
-pub struct Test {
-    pub test: HashMap<u32, u32>,
-}
-
 pub struct InteractionStateEvent(Entity, resources::interact_state::InteractState);
 pub struct InteractionStartsEvent(Entity, Entity);
 
 
 fn setup(
     mut commands: Commands,
-    mut player_data: ResMut<components::datas::PlayerData>,
-    mut camera_data: ResMut<components::datas::CameraData>,
+    mut player_data: ResMut<resources::player::data::PlayerData>,
+    mut camera_data: ResMut<resources::player::camera::CameraData>,
     mut window: ResMut<Windows>,
 ) {
     camera_data.speed = 20.0;
-    player_data.ore = 15;
+    player_data.set_ore(15);
     player_data.max_ore = 25;
+    player_data.techs = HashMap::new();
+    player_data.techs.insert(Techs::BetterOreMining, true);
+    player_data.techs.insert(Techs::DialogPossibility, false);
+
 
     window.primary_mut().set_cursor_lock_mode(true);
     commands.insert_resource(DefaultPluginState::<components::selectable::Selectable>::default().with_debug_cursor());
@@ -276,7 +258,7 @@ fn move_camera(
     keyboard_input: Res<Input<KeyCode>>,
     windows: Res<Windows>,
     mut transforms: Query<&mut Transform, With<Camera3d>>,
-    camera_data: Res<components::datas::CameraData>,
+    camera_data: Res<resources::player::camera::CameraData>,
     time: Res<Time>,
 ) {
     let mut translation = Vec3::default();
@@ -310,7 +292,7 @@ fn move_camera(
     }
 }
 
-fn change_camera_data(keyboard_input: Res<Input<KeyCode>>, mut camera_data: ResMut<components::datas::CameraData>) {
+fn change_camera_data(keyboard_input: Res<Input<KeyCode>>, mut camera_data: ResMut<resources::player::camera::CameraData>) {
     if keyboard_input.just_pressed(KeyCode::NumpadAdd) {
         camera_data.speed += 5.0;
     }
@@ -349,10 +331,10 @@ pub fn select_character_picking_event(
     }
 }
 
-fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>, player_data: Res<components::datas::PlayerData>) {
+fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>, player_data: Res<resources::player::data::PlayerData>) {
     commands.spawn_bundle(
         TextBundle::from_sections([TextSection::new(
-            format!("Ore: {}/{}", player_data.ore, player_data.max_ore),
+            format!("Ore: {}/{}", player_data.ore(), player_data.max_ore),
             TextStyle {
                 font: asset_server.load("fonts/Akira Expanded Demo.otf"),
                 font_size: 20.0,
@@ -549,25 +531,25 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>, player_data:
 }
 
 
-fn update_ore_ui(player_data: Res<components::datas::PlayerData>, mut texts: Query<&mut Text, With<CollectibleResourceUI>>) {
+fn update_ore_ui(player_data: Res<resources::player::data::PlayerData>, mut texts: Query<&mut Text, With<CollectibleResourceUI>>) {
     for mut text in texts.iter_mut() {
-        text.sections[0].value = format!("Ore: {}/{}", player_data.ore, player_data.max_ore);
+        text.sections[0].value = format!("Ore: {}/{}", player_data.ore(), player_data.max_ore);
     }
 }
 
 fn debug_inputs(
     keyboard_input: Res<Input<KeyCode>>,
-    mut player_data: ResMut<components::datas::PlayerData>,
+    mut player_data: ResMut<resources::player::data::PlayerData>,
     mut current_dialog: ResMut<resources::dialog::CurrentDialog>,
     datas: ResMut<resources::dialog::DialogDatas>
 ) {
     if keyboard_input.just_pressed(KeyCode::P) {
-        player_data.ore += 1;
+        player_data.add_ore(1);
     }
     if keyboard_input.just_pressed(KeyCode::D) {
         current_dialog.dialog = datas.dialogs.get(&0).cloned();
     }
     if keyboard_input.just_pressed(KeyCode::F) {
-        plugins::dialog::create_json();
+        plugins::dialog::utility::create_json();
     }
 }

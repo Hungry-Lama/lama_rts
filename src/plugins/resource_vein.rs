@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_text_mesh::TextMesh;
 
-use crate::{components::{datas::PlayerData, resource_vein::ResourceVeinComponent, can_interact::CanInteract}, resources::interact_state::InteractState, InteractionStateEvent};
+use crate::{components::{resource_vein::ResourceVeinComponent, can_interact::CanInteract}, resources::{interact_state::InteractState, techs_enums::Techs, player::data::PlayerData}, InteractionStateEvent};
 
 pub fn collect_resource (
     mut player_data: ResMut<PlayerData>,
@@ -28,13 +28,20 @@ pub fn collect_resource (
                 !delete
             });
 
-            let workers = vein.workers.len() as u32;
+            let mut workers = vein.workers.len() as u32;
+
+            if let Some(t) = player_data.techs.get(&Techs::BetterOreMining) {
+                if *t == true {
+                    workers *= 2;
+                }
+            }
+
             let n = if vein.amount >= workers {
                 workers
             } else {
                 vein.amount
             };
-            player_data.ore += n as u32;
+            player_data.add_ore(n);
             vein.amount -= n as u32;
         }
     }
