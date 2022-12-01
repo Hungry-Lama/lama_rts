@@ -1,9 +1,10 @@
 
 use bevy::prelude::*;
 
-use crate::{resources::{dialog::{DialogDatas, CurrentDialog, DialogConsequences, DialogCondition}, player::data::PlayerData}, DialogBox, DialogText, components::dialog::dialog_choice_button::DialogChoiceButton};
-use crate::resources::dialog::DialogChoiceEvent::*;
+use crate::{resources::{dialog::{DialogChoiceEvent::*, DialogDatas, CurrentDialog, DialogCondition, DialogConsequences}, player::data::PlayerData}, components::dialog::{dialog_ui::DialogBox, dialog_choice_button::DialogChoiceButton}};
 use rand::prelude::*;
+use crate::components::dialog::dialog_ui::DialogText;
+
 
 pub struct ReadNextDialog(Option<u32>);
 

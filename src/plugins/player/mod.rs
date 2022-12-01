@@ -1,14 +1,16 @@
 use bevy::prelude::{Plugin, App};
 
-use crate::resources::{player::{camera::CameraData, data::PlayerData}};
+use crate::resources::player::data::PlayerData;
 
-pub mod player_data;
+pub mod setup;
+pub mod datas;
 
 pub struct PlayerPlugin;
 
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<PlayerData>()
-        .init_resource::<CameraData>();
+        .add_startup_system(setup::setup)
+        .add_system(datas::update_ore_ui);
     }
 }

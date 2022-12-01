@@ -9,3 +9,6 @@ pub struct ResourceVeinComponent {
     pub workers: Vec<Entity>,
     pub timer: Timer,
 }
+
+#[derive(Component)]
+pub struct CollectibleResourceUI;

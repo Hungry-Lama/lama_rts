@@ -1,3 +1,4 @@
+pub mod camera;
 pub mod can_interact;
 pub mod dialog;
 pub mod interactible;

@@ -1,7 +1,18 @@
 use bevy::prelude::*;
 use bevy_text_mesh::TextMesh;
 
-use crate::{components::{resource_vein::ResourceVeinComponent, can_interact::CanInteract}, resources::{interact_state::InteractState, techs_enums::Techs, player::data::PlayerData}, InteractionStateEvent};
+use crate::{components::{resource_vein::ResourceVeinComponent, can_interact::CanInteract}, resources::{interact_state::{InteractState, InteractionStateEvent}, techs_enums::Techs, player::data::PlayerData}};
+
+pub struct ResourceVeinPlugin;
+
+impl Plugin for ResourceVeinPlugin {
+    fn build(&self, app: &mut App) {
+        app
+        .add_system(collect_resource)
+        .add_system(cleanup_empty_resource_vein)
+        .add_system(update_resource_vein_remaining_text);
+    }
+}
 
 pub fn collect_resource (
     mut player_data: ResMut<PlayerData>,

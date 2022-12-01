@@ -1,3 +1,4 @@
+pub mod camera;
 pub mod dialog;
 pub mod interact_state;
 pub mod player;
