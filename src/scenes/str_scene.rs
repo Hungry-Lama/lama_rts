@@ -7,13 +7,14 @@ use bevy_text_mesh::{TextMeshBundle, TextMesh};
 
 use crate::{components::{self, resource_vein::CollectibleResourceUI, dialog::{dialog_ui::DialogBox, dialog_choice_button::DialogChoiceButton}}, resources};
 
+use super::SceneState;
+
 pub struct STRScenePlugin;
 
 impl Plugin for STRScenePlugin {
     fn build(&self, app: &mut App) {
-        app
-        .add_startup_system(spawn_basic_scene)
-        .add_startup_system(setup_ui);
+        app.add_system_set(SystemSet::on_enter(SceneState::RTSScene).with_system(spawn_basic_scene));
+        app.add_system_set(SystemSet::on_enter(SceneState::RTSScene).with_system(setup_ui));
     }
 }
 
