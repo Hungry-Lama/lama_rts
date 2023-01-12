@@ -4,6 +4,7 @@ use bevy_mod_raycast::*;
 use bevy_text_mesh::prelude::*;
 
 mod components;
+mod materials;
 mod resources;
 mod plugins;
 mod scenes;
@@ -12,6 +13,7 @@ rust_i18n::i18n!("locales");
 
 fn main() {
     App::new()
+        .add_state(scenes::SceneState::MainMenuScene)
         .add_plugins(DefaultPlugins)
         .add_plugins(DefaultPickingPlugins)
         .add_plugin(DefaultRaycastingPlugin::<components::selectable::Selectable>::default())
@@ -24,6 +26,7 @@ fn main() {
         .add_plugin(plugins::selection::SelectionPlugin)
         .add_plugin(plugins::window::WindowPlugin)
         .add_plugin(scenes::str_scene::STRScenePlugin)
+        .add_plugin(scenes::main_menu_scene::MainMenuScenePlugin)
 
         .add_system(debug_inputs)
         .run();
