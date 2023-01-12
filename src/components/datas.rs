@@ -8,3 +8,4 @@ pub struct PlayerData {
     pub ore: u32,
     pub max_ore: u32,
 }
+

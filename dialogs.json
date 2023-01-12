@@ -1,0 +1,164 @@
+{
+  "dialogs": {
+    "6": {
+      "text": "*sad*",
+      "choices": [
+        {
+          "text": "I don't care",
+          "conditions": null,
+          "consequences": null,
+          "id_next": null
+        }
+      ]
+    },
+    "2": {
+      "text": "I need ore, can you give me 20 please ?",
+      "choices": [
+        {
+          "text": "Sure, take this my friend",
+          "conditions": [
+            {
+              "ResourceCheck": [
+                "Ore",
+                20
+              ]
+            }
+          ],
+          "consequences": [
+            {
+              "SubResource": [
+                "Ore",
+                20
+              ]
+            }
+          ],
+          "id_next": {
+            "Goto": 3
+          }
+        },
+        {
+          "text": "Nope",
+          "conditions": null,
+          "consequences": null,
+          "id_next": {
+            "Goto": 3
+          }
+        }
+      ]
+    },
+    "1": {
+      "text": "Do you want some free ore ?",
+      "choices": [
+        {
+          "text": "Sure !",
+          "conditions": null,
+          "consequences": [
+            {
+              "AddResource": [
+                "Ore",
+                25
+              ]
+            }
+          ],
+          "id_next": {
+            "Goto": 2
+          }
+        },
+        {
+          "text": "No thanks, it sounds like a trap",
+          "conditions": null,
+          "consequences": null,
+          "id_next": {
+            "Goto": 2
+          }
+        }
+      ]
+    },
+    "3": {
+      "text": "Wanna play a coin toss game with me ? The bet will be 1 ore",
+      "choices": [
+        {
+          "text": "I'm in !",
+          "conditions": [
+            {
+              "ResourceCheck": [
+                "Ore",
+                1
+              ]
+            }
+          ],
+          "consequences": [
+            {
+              "SubResource": [
+                "Ore",
+                1
+              ]
+            }
+          ],
+          "id_next": {
+            "Random": [
+              [
+                100,
+                50
+              ],
+              [
+                4,
+                5
+              ]
+            ]
+          }
+        },
+        {
+          "text": "I have better things to do, leave me alone",
+          "conditions": null,
+          "consequences": null,
+          "id_next": {
+            "Goto": 6
+          }
+        }
+      ]
+    },
+    "4": {
+      "text": "GG, you won ! Here's your reward",
+      "choices": [
+        {
+          "text": "Thanks ! See ya",
+          "conditions": null,
+          "consequences": [
+            {
+              "AddResource": [
+                "Ore",
+                2
+              ]
+            }
+          ],
+          "id_next": null
+        }
+      ]
+    },
+    "0": {
+      "text": "Here's a bunch of dialogs for testing purposes",
+      "choices": [
+        {
+          "text": "Uh... Yeah, sure !",
+          "conditions": null,
+          "consequences": null,
+          "id_next": {
+            "Goto": 1
+          }
+        }
+      ]
+    },
+    "5": {
+      "text": "Heh, I won !",
+      "choices": [
+        {
+          "text": "GG WP",
+          "conditions": null,
+          "consequences": null,
+          "id_next": null
+        }
+      ]
+    }
+  }
+}
