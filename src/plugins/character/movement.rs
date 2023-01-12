@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_mod_picking::RayCastSource;
 use bevy_mod_raycast::RayCastMethod;
 
-use crate::{components::{movable::Movable, can_interact::CanInteract, interactible::Interactible, selectable::{Selectable, Selected}, resource_vein::ResourceVeinComponent}, InteractionStateEvent, resources::interact_state::InteractState, InteractionStartsEvent};
+use crate::{components::{movable::Movable, can_interact::CanInteract, interactible::Interactible, selectable::{Selectable, Selected}, resource_vein::ResourceVeinComponent}, resources::interact_state::{InteractState, InteractionStartsEvent, InteractionStateEvent}};
 use crate::resources::target_type::TargetType;
 
 pub fn move_towards_target(
